@@ -6,6 +6,7 @@ using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Runtime.CompilerServices;
 
 
 
@@ -72,6 +73,86 @@ namespace _2c2pFileTransferAndStore.Utils
                 Console.WriteLine($"Connection failed: {ex.Message}");
             }
         }
+        public async Task<bool> DoesFolderExists(string bucketName, string destinationPath)
+        {
+            ListObjectsResponse response = null;
+            try
+            {
+                ListObjectsRequest request = new ListObjectsRequest
+                {
+                    BucketName = bucketName,
+                    Prefix = destinationPath
+                };
+                response = await s3Client.ListObjectsAsync(request);
+            }catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking folder existence: {ex.Message}");
+            }
+            return (response != null && response.S3Objects != null && response.S3Objects.Count > 0);
+        }
+        public async Task<bool> CreateFoldersAsync(string bucketName, string filePath)
+        {
+            Console.WriteLine("folder is creating");
+            try
+            {
+                if (string.IsNullOrEmpty(bucketName))
+                {
+                    Console.WriteLine("Error: bucketName cannot be null or empty");
+                    return false;
+                }
+
+                if (string.IsNullOrEmpty(filePath))
+                {
+                    Console.WriteLine("Error: filePath cannot be null or empty");
+                    return false;
+                }
+
+                if (!filePath.EndsWith("/"))
+                {
+                    filePath += "/";
+                }
+                Console.WriteLine($"{filePath}");
+                
+                PutObjectRequest request = new PutObjectRequest
+                {
+                    BucketName = bucketName,
+                    Key = filePath,
+                    ContentBody = ""
+                };
+                PutObjectResponse response = await s3Client.PutObjectAsync(request);
+                Console.WriteLine($"Folder '{filePath}' created successfully in bucket '{bucketName}'.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating folder: {ex.Message}");
+                return false;
+            }
+
+        }
+        //public async Task UploadDirAsync(string bucketName, string filePath)
+        //{
+        //    string BucketName = bucketName;
+        //    string directoryPath = filePath;
+        //    Console.WriteLine("Uploading folder to S3 bucket...");
+        //    try
+        //    {
+        //        Console.WriteLine("Starting now");
+        //        var directoryTransferUtility = new TransferUtility(s3Client);
+        //        await directoryTransferUtility.UploadDirectoryAsync(directoryPath,
+        //            BucketName);
+        //        Console.WriteLine("Upload folder completed");
+
+        //    }
+        //    catch (AmazonS3Exception e)
+        //    {
+        //        Console.WriteLine($"Error encountered on server. Message:'{e.Message}' when writing an object");
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Console.WriteLine($"Unknown encountered on server. Message:'{e.Message}' when writing an object");
+        //    }
+        //}
         //public async Task UploadFileSync(string bucketName, string filePath, string destinationPath)
         //{
         //    try
@@ -123,7 +204,6 @@ namespace _2c2pFileTransferAndStore.Utils
             try
                 
             {
-                
                 var request = new PutBucketRequest
                 {
                     BucketName = bucketName,
@@ -139,9 +219,40 @@ namespace _2c2pFileTransferAndStore.Utils
                 Console.WriteLine($"Error creating bucket: {ex.Message}");
                 return false;
             }
-
-
         }
+        public async Task UploadFileAsync(string bucketName, string destinationPath, string filePath)
+        {
+            try
+            {
+                if (!destinationPath.EndsWith("/"))
+                {
+                    destinationPath += "/";
+                }
+                string fileName = Path.GetFileName(filePath);
+                var fileUploadRequest = new PutObjectRequest
+                {
+                    BucketName = bucketName,
+                    Key = destinationPath + fileName,
+                    FilePath = filePath
+                };
+                PutObjectResponse response = await s3Client.PutObjectAsync(fileUploadRequest);
+                if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    Console.WriteLine($"File '{filePath}' uploaded to bucket '{bucketName}' at '{destinationPath}' successfully.");
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to upload file '{filePath}' to bucket '{bucketName}'. Status code: {response.HttpStatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error uploading file: {ex.Message}");
+            }
+        }
+
+
+        
     }
     
 }

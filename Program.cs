@@ -58,8 +58,8 @@ class Program
         bool BucketExists = await s3Service.EnsureBucketExists(configSetting.destinationBucket);
         if (BucketExists)
         {
-            //Console.WriteLine($"Bucket {configSetting.destinationBucket} already exists");
-            
+            Console.WriteLine($"Bucket {configSetting.destinationBucket} already exists");
+
         }
         else
         {
@@ -75,7 +75,36 @@ class Program
             }
         }
         Console.WriteLine($"Testing Uploading file service");
-        //await s3Service.UploadFileSync(configSetting.destinationBucket, filePath, configSetting.destinationPath);
+        bool testFolder= await s3Service.DoesFolderExists(configSetting.destinationBucket, configSetting.destinationPath);
+        
+        if (testFolder)
+        {
+            Console.WriteLine($"Folder {configSetting.destinationBucket}/{configSetting.destinationPath} already exists in the bucket.");
+        }
+        else
+        {
+            Console.WriteLine($"Folder does not exist in the bucket");
+            await s3Service.CreateFoldersAsync(configSetting.destinationBucket, configSetting.destinationPath);
+            
+            
+        }
+        //string LocalfileName = Path.GetFileName(filePath);
+        //Console.WriteLine($"Local file name is {LocalfileName}");
+        //await s3Service.UploadFileAsync(configSetting.destinationBucket, configSetting.destinationPath, filePath);
+
+        int totalFiles = fileReader.GetFileCount();
+        if (totalFiles > 1)
+        {
+            for(var i = 0; i < totalFiles; i++)
+            {
+                var file = fileReader.GetFiles()[i];
+                Console.WriteLine($"File {i + 1} : {file.Name}");
+                await s3Service.UploadFileAsync(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
+            }
+        }
+        
+            
     }
+    
         
 }
