@@ -14,9 +14,9 @@ public class ConfigSettings
 }
 public class AWSSettings
 {
-    public string AccessKey { get; set; } 
-    public string SecretKey { get; set; } 
-    public string Region { get; set; } 
+    public string AccessKey { get; set; } = null!;
+    public string SecretKey { get; set; } = null!;
+    public string Region { get; set; } = null!;
 }
 
 class Program
@@ -37,7 +37,6 @@ class Program
         var AWSSection = config.GetRequiredSection("AWS");
         AWSSettings awsSettings = new AWSSettings();
         AWSSection.Bind(awsSettings);
-
 
         Console.WriteLine("Company Name: " + configSetting.CompanyName);
         Console.WriteLine("ID: " + configSetting.ID);
@@ -88,12 +87,14 @@ class Program
             
             
         }
-        //string LocalfileName = Path.GetFileName(filePath);
-        //Console.WriteLine($"Local file name is {LocalfileName}");
-        //await s3Service.UploadFileAsync(configSetting.destinationBucket, configSetting.destinationPath, filePath);
 
         int totalFiles = fileReader.GetFileCount();
-        if (totalFiles > 1)
+        if (totalFiles == 0)
+        {
+            Console.WriteLine("No files found in the specified directory.Please ensure the directory contains files.");
+            return;
+        }
+        else if (totalFiles > 1)
         {
             for(var i = 0; i < totalFiles; i++)
             {
@@ -101,6 +102,12 @@ class Program
                 Console.WriteLine($"File {i + 1} : {file.Name}");
                 await s3Service.UploadFileAsync(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
             }
+        }
+        else
+        {
+            var file = fileReader.GetFiles()[0];
+            Console.WriteLine($"File : {file.Name}");
+            await s3Service.UploadFileAsync(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
         }
         
             
