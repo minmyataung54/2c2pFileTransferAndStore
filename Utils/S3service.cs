@@ -9,8 +9,6 @@ using System;
 using System.Runtime.CompilerServices;
 
 
-
-
 namespace _2c2pFileTransferAndStore.Utils
 {
     public class S3service
@@ -45,12 +43,6 @@ namespace _2c2pFileTransferAndStore.Utils
         //Check if the s3 client is initialized and test the connection to S3, and list the buckets in the S3.
         public async Task TestConnection()
         {
-            if (s3Client == null)
-            {
-                Console.WriteLine("S3 Client is not initialized.");
-                return;
-            }
-
             try
             {
                 Console.WriteLine("Testing connection to S3...");
@@ -58,14 +50,19 @@ namespace _2c2pFileTransferAndStore.Utils
                 //var response = await s3Client.ListBucketsAsync();
                 var response = await s3Client.ListBucketsAsync();
                 Console.WriteLine("Connection to S3 is successful");
+                if (response.Buckets == null || response.Buckets.Count == 0) 
+                    Console.WriteLine("No buckets found in S3.") ;
                 //foreach(var bucket in response.Buckets)
                 //{
                 //    Console.WriteLine($"- {bucket.BucketName}");
                 //}
-                Console.WriteLine($"Total Buckets: {response.Buckets.Count}");
-                foreach(var bucket in response.Buckets)
+                else
                 {
-                    Console.WriteLine($"Bucket Name: {bucket.BucketName}");
+                    Console.WriteLine($"Total Buckets: {response.Buckets.Count}");
+                    foreach (var bucket in response.Buckets)
+                    {
+                        Console.WriteLine($"Bucket Name: {bucket.BucketName}");
+                    }
                 }
             }
             catch (Exception ex)
@@ -89,7 +86,7 @@ namespace _2c2pFileTransferAndStore.Utils
             {
                 Console.WriteLine($"Error checking folder existence: {ex.Message}");
             }
-            return (response != null && response.S3Objects != null && response.S3Objects.Count > 0);
+            return (response != null && response.S3Objects != null );
         }
         //Folder creation in s3 based on the config file destinationPath
         public async Task<bool> CreateFoldersAsync(string bucketName, string folderPath)
@@ -185,21 +182,25 @@ namespace _2c2pFileTransferAndStore.Utils
         {
             try
             {
-                var response = await s3Client.ListBucketsAsync();
-                if(response.Buckets.Any(b => b.BucketName.Equals(bucketName, StringComparison.OrdinalIgnoreCase)))
-                {
-                    Console.WriteLine($"Bucket '{bucketName}' already exists.");
-                    return true;
-                }else
-                {
-                    Console.WriteLine($"Bucket '{bucketName}' does not exist.");
-                    return false;
-                }
 
-            }catch (Exception ex)
+                await s3Client.ListObjectsV2Async(new ListObjectsV2Request
+                {
+                    BucketName = bucketName,
+                    MaxKeys = 1
+                });
+                //Console.WriteLine($"Bucket '{bucketName}' exists.");
+                return true;
+            }
+            catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                //Console.WriteLine($"Bucket '{bucketName}' does not exist.");
+                return false;
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine($"Error checking bucket existence: {ex.Message}");
                 return false;
+
             }
         }
         //Create a new bucket with the specified name and region

@@ -8,9 +8,57 @@ public class ConfigSettings
 {
     public string ID { get; set; } = null!;
     public string CompanyName { get; set; } = null!;
-    public string destinationPath { get; set; } = null!;
-    public string destinationBucket { get; set; } = null!;
-    public bool IsEncryptEnabled { get; set; }
+    private string _localsourcePath = null!;
+    public string localsourcePath
+    {
+        get => _localsourcePath;
+        set
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                Console.WriteLine("Warning: Empty path provided");
+                Console.WriteLine("A valid destination path is required. Exiting program.");
+                Environment.Exit(1);
+
+            }
+            _localsourcePath = value;
+        }
+    }
+    private string _destinationPath = null!;
+    public string destinationPath
+    {
+        get => _destinationPath;
+        set
+        {
+            if(string.IsNullOrEmpty(value))
+            {
+                Console.WriteLine("Warning: Empty path provided");
+                Console.WriteLine("A valid destination path is required. Exiting program.");
+                Environment.Exit(1);
+                
+            }
+            _destinationPath = value;
+        }
+    }
+    private string _destinationBucket = null!;
+    public string destinationBucket
+    {
+        get => _destinationBucket;
+        set
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                Console.WriteLine("Warning: Empty path provided");
+                Console.WriteLine("A valid destination path is required. Exiting program.");
+                Environment.Exit(1);
+                
+            }
+            _destinationBucket = value;
+        }
+    }
+    //public string destinationPath { get; set; } = null!;
+    //public string destinationBucket { get; set; } = null!;
+    public bool IsEncryptEnabled { get; set; } 
 }
 public class AWSSettings
 {
@@ -44,23 +92,24 @@ class Program
         Console.WriteLine("Destination Bucket: " + configSetting.destinationBucket);
         Console.WriteLine("Is Encryption Enabled: " + configSetting.IsEncryptEnabled);
 
-        Console.WriteLine("Enter the file path to transfer and store:");
-        string filePath = Console.ReadLine();
+        
+        string filePath = configSetting.localsourcePath;
         Console.WriteLine($"The file folder that u entered is: {filePath}");
+        
 
-        if (configSetting.IsEncryptEnabled)
-        {
-            Console.WriteLine("Encryption is enabled. Encrypting file name...");
-        }
+        //if (configSetting.IsEncryptEnabled)
+        //{
+        //    Console.WriteLine("Encryption is enabled. Encrypting file name...");
+        //}
         FileReader fileReader = new FileReader(filePath);
         
         fileReader.DisplayFileSummary();
-        for (int i = 0; i < fileReader.GetFileCount(); i++)
-        {
-            var file = fileReader.GetFiles()[i];
-            string fileName = FileEncrypt.EncryptFileName(file.Name);
-            Console.WriteLine($"Encrypted File Name: {fileName}");
-        }
+        //for (int i = 0; i < fileReader.GetFileCount(); i++)
+        //{
+        //    var file = fileReader.GetFiles()[i];
+        //    string fileName = FileEncrypt.EncryptFileName(file.Name);
+        //    Console.WriteLine($"Encrypted File Name: {fileName}");
+        //}
 
         var s3Service = new S3service();
 
