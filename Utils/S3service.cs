@@ -220,30 +220,36 @@ namespace _2c2pFileTransferAndStore.Utils
                 return false;
             }
         }
-        public async Task UploadFileAsync(string bucketName, string destinationPath, string filePath)
+        public async Task UploadFileAsyncIncludeTempName(string bucketName, string destinationPath, string filePath)
         {
-            try
-            {
+            
                 if (!destinationPath.EndsWith("/"))
                 {
                     destinationPath += "/";
                 }
                 string fileName = Path.GetFileName(filePath);
-                var fileUploadRequest = new PutObjectRequest
+                string tempFileName = fileName + ".upload";
+            try
+            {
+                var tempFileUploadRequest = new PutObjectRequest
                 {
                     BucketName = bucketName,
-                    Key = destinationPath + fileName,
-                    FilePath = filePath
+                    Key = destinationPath + tempFileName,
+                    FilePath = filePath,
                 };
-                PutObjectResponse response = await s3Client.PutObjectAsync(fileUploadRequest);
-                if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                await s3Client.PutObjectAsync(tempFileUploadRequest);
+
+                await s3Client.CopyObjectAsync(new CopyObjectRequest
                 {
-                    Console.WriteLine($"File '{filePath}' uploaded to bucket '{bucketName}' at '{destinationPath}' successfully.");
-                }
-                else
-                {
-                    Console.WriteLine($"Failed to upload file '{filePath}' to bucket '{bucketName}'. Status code: {response.HttpStatusCode}");
-                }
+                    SourceBucket = bucketName,
+                    SourceKey = destinationPath + tempFileName,
+                    DestinationBucket = bucketName,
+                    DestinationKey = destinationPath + fileName
+                });
+
+                await s3Client.DeleteObjectAsync(bucketName, tempFileUploadRequest.Key);
+                //PutObjectResponse response = await s3Client.PutObjectAsync(fileUploadRequest);
+                
             }
             catch (Exception ex)
             {

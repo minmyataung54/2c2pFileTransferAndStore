@@ -100,14 +100,14 @@ class Program
             {
                 var file = fileReader.GetFiles()[i];
                 Console.WriteLine($"File {i + 1} : {file.Name}");
-                await s3Service.UploadFileAsync(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
+                await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
             }
         }
         else
         {
             var file = fileReader.GetFiles()[0];
             Console.WriteLine($"File : {file.Name}");
-            await s3Service.UploadFileAsync(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
+            await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
         }
         
             
