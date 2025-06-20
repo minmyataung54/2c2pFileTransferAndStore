@@ -48,12 +48,24 @@ class Program
         string filePath = Console.ReadLine();
         Console.WriteLine($"The file folder that u entered is: {filePath}");
 
+        if (configSetting.IsEncryptEnabled)
+        {
+            Console.WriteLine("Encryption is enabled. Encrypting file name...");
+        }
         FileReader fileReader = new FileReader(filePath);
+        
         fileReader.DisplayFileSummary();
+        for (int i = 0; i < fileReader.GetFileCount(); i++)
+        {
+            var file = fileReader.GetFiles()[i];
+            string fileName = FileEncrypt.EncryptFileName(file.Name);
+            Console.WriteLine($"Encrypted File Name: {fileName}");
+        }
 
         var s3Service = new S3service();
 
         await s3Service.TestConnection();
+        // Testing if the bucket exists and creating it if it does not exist
         bool BucketExists = await s3Service.EnsureBucketExists(configSetting.destinationBucket);
         if (BucketExists)
         {
@@ -73,6 +85,7 @@ class Program
                 Console.WriteLine($"Failed to create bucket {configSetting.destinationBucket}.");
             }
         }
+        // Testing if the folder exists in the bucket and creating it if it does not exist
         Console.WriteLine($"Testing Uploading file service");
         bool testFolder= await s3Service.DoesFolderExists(configSetting.destinationBucket, configSetting.destinationPath);
         
@@ -87,7 +100,7 @@ class Program
             
             
         }
-
+        //Getting the file count and uploading files by looping through the files in the local directory
         int totalFiles = fileReader.GetFileCount();
         if (totalFiles == 0)
         {
@@ -96,12 +109,36 @@ class Program
         }
         else if (totalFiles > 1)
         {
-            for(var i = 0; i < totalFiles; i++)
+            for (var i = 0; i < totalFiles; i++)
             {
                 var file = fileReader.GetFiles()[i];
+                
                 Console.WriteLine($"File {i + 1} : {file.Name}");
-                await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
+                if (configSetting.IsEncryptEnabled)
+                {
+                    await s3Service.UploadFileAsyncIncludeEncryptName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
+                }
+                else
+                {
+                    await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
+                }
+                    
             }
+            //for(var i=0; i < totalFiles; i++)
+            //{
+            //    var file = fileReader.GetFiles()[i];
+            //    if (configSetting.IsEncryptEnabled)
+            //    {
+            //        var encryptFileName = FileEncrypt.EncryptFileName(file.Name);
+            //        Console.WriteLine($"File {i+1} : Encrypted File Name: {encryptFileName}");
+            //        await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, encryptFileName);
+            //    }
+            //    else
+            //    {
+            //                           Console.WriteLine($"File {i+1} : {file.Name}");
+            //        await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
+            //    }
+            //}
         }
         else
         {
