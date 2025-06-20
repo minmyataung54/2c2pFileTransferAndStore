@@ -19,7 +19,6 @@ public class ConfigSettings
                 Console.WriteLine("Warning: Empty path provided");
                 Console.WriteLine("A valid destination path is required. Exiting program.");
                 Environment.Exit(1);
-
             }
             _localsourcePath = value;
         }
@@ -51,7 +50,6 @@ public class ConfigSettings
                 Console.WriteLine("Warning: Empty path provided");
                 Console.WriteLine("A valid destination path is required. Exiting program.");
                 Environment.Exit(1);
-                
             }
             _destinationBucket = value;
         }
@@ -95,7 +93,6 @@ class Program
         
         string filePath = configSetting.localsourcePath;
         Console.WriteLine($"The file folder that u entered is: {filePath}");
-        
 
         //if (configSetting.IsEncryptEnabled)
         //{
@@ -110,7 +107,7 @@ class Program
         //    string fileName = FileEncrypt.EncryptFileName(file.Name);
         //    Console.WriteLine($"Encrypted File Name: {fileName}");
         //}
-
+        //Testing S3 service to check if the connection is alaredy established or not 
         var s3Service = new S3service();
 
         await s3Service.TestConnection();
@@ -194,9 +191,7 @@ class Program
             var file = fileReader.GetFiles()[0];
             Console.WriteLine($"File : {file.Name}");
             await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
-        }
-        
-            
+        }       
     }
     
         
