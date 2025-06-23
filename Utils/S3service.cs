@@ -301,11 +301,6 @@ namespace _2c2pFileTransferAndStore.Utils
             }
         }
 
-
-
-
-
-
     }
     
 }

@@ -8,7 +8,7 @@ public class ConfigSettings
 {
     //public string ID { get; set; } = null!;
     //public string CompanyName { get; set; } = null!;
-    private string _localsourcePath = null!;
+    private string _localsourcePath = string.Empty;
     public string localsourcePath
     {
         get => _localsourcePath;
@@ -23,7 +23,7 @@ public class ConfigSettings
             _localsourcePath = value;
         }
     }
-    private string _destinationPath = null!;
+    private string _destinationPath = string.Empty;
     public string destinationPath
     {
         get => _destinationPath;
@@ -39,7 +39,7 @@ public class ConfigSettings
             _destinationPath = value;
         }
     }
-    private string _destinationBucket = null!;
+    private string _destinationBucket = string.Empty;
     public string destinationBucket
     {
         get => _destinationBucket;
@@ -61,7 +61,7 @@ public class ConfigSettings
 public class AWSSettings
 {
     
-    private string _AccessKey { get; set; } = null!;
+    private string _AccessKey { get; set; } = string.Empty;
     public string AccessKey
     {
         get => _AccessKey;
@@ -76,7 +76,7 @@ public class AWSSettings
             _AccessKey = value;
         }
     }
-    private string _SecretKey { get; set; } = null!;
+    private string _SecretKey { get; set; } = string.Empty;
     public string SecretKey
     {
         get => _SecretKey;
@@ -92,7 +92,7 @@ public class AWSSettings
         }
     }
 
-    private string _Region { get; set; } = null!;
+    private string _Region { get; set; } = string.Empty;
     public string Region
     {
         get => _Region;
@@ -182,6 +182,7 @@ class Program
             else
             {
                 Console.WriteLine($"Failed to create bucket {configSetting.destinationBucket}.");
+                Environment.Exit(1);
             }
         }
         // Testing if the folder exists in the bucket and creating it if it does not exist
@@ -253,6 +254,5 @@ class Program
         Console.WriteLine($"Total number of files failed to upload: {failedcount}");
 
     }
-    
-        
+
 }
