@@ -226,7 +226,7 @@ namespace _2c2pFileTransferAndStore.Utils
             }
         }
         //when finish uploading the file, rename it to the original filename from filename.upload
-        public async Task UploadFileAsyncIncludeTempName(string bucketName, string destinationPath, string filePath)
+        public async Task <bool> UploadFileAsyncIncludeTempName(string bucketName, string destinationPath, string filePath)
         {
             
                 if (!destinationPath.EndsWith("/"))
@@ -255,14 +255,15 @@ namespace _2c2pFileTransferAndStore.Utils
 
                 await s3Client.DeleteObjectAsync(bucketName, tempFileUploadRequest.Key);
                 //PutObjectResponse response = await s3Client.PutObjectAsync(fileUploadRequest);
-                
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error uploading file: {ex.Message}");
+                return false;
             }
         }
-        public async Task UploadFileAsyncIncludeEncryptName(string bucketName, string destinationPath, string filePath)
+        public async Task <bool>UploadFileAsyncIncludeEncryptName(string bucketName, string destinationPath, string filePath)
         {
 
             if (!destinationPath.EndsWith("/"))
@@ -291,11 +292,12 @@ namespace _2c2pFileTransferAndStore.Utils
 
                 await s3Client.DeleteObjectAsync(bucketName, tempFileUploadRequest.Key);
                 //PutObjectResponse response = await s3Client.PutObjectAsync(fileUploadRequest);
-
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error uploading file: {ex.Message}");
+                return false;
             }
         }
 

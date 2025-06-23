@@ -6,8 +6,8 @@ namespace _2c2pFileTransferAndStore;
 
 public class ConfigSettings
 {
-    public string ID { get; set; } = null!;
-    public string CompanyName { get; set; } = null!;
+    //public string ID { get; set; } = null!;
+    //public string CompanyName { get; set; } = null!;
     private string _localsourcePath = null!;
     public string localsourcePath
     {
@@ -60,9 +60,53 @@ public class ConfigSettings
 }
 public class AWSSettings
 {
-    public string AccessKey { get; set; } = null!;
-    public string SecretKey { get; set; } = null!;
-    public string Region { get; set; } = null!;
+    
+    private string _AccessKey { get; set; } = null!;
+    public string AccessKey
+    {
+        get => _AccessKey;
+        set
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                Console.WriteLine("Warning : Empty AWS Access Key provided");
+                Console.WriteLine("A valid AWS Access Key is required. Exiting program.");
+                Environment.Exit(1);
+            }
+            _AccessKey = value;
+        }
+    }
+    private string _SecretKey { get; set; } = null!;
+    public string SecretKey
+    {
+        get => _SecretKey;
+        set
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                Console.WriteLine("Warning : Empty AWS Secret Key provided");
+                Console.WriteLine("A valid AWS Secret Key is required. Exiting Program.");
+                Environment.Exit(1);
+            }
+            _SecretKey = value;
+        }
+    }
+
+    private string _Region { get; set; } = null!;
+    public string Region
+    {
+        get => _Region;
+        set
+        {
+            if(string.IsNullOrEmpty(value))
+            {
+                Console.WriteLine("Warning : Empty AWS Region provided");
+                Console.WriteLine("A valid AWS Region is required. Exiting Program.");
+                Environment.Exit(1);
+            }
+            _Region = value;
+        }
+    }
 }
 
 class Program
@@ -75,7 +119,7 @@ class Program
             .AddEnvironmentVariables()
             .Build();
 
-        var ConfigSection = config.GetRequiredSection("Companyconfig");
+        var ConfigSection = config.GetRequiredSection("Company1config");
         ConfigSettings configSetting = new ConfigSettings();
         ConfigSection.Bind(configSetting);
 
@@ -84,8 +128,16 @@ class Program
         AWSSettings awsSettings = new AWSSettings();
         AWSSection.Bind(awsSettings);
 
-        Console.WriteLine("Company Name: " + configSetting.CompanyName);
-        Console.WriteLine("ID: " + configSetting.ID);
+        //var Config2Section = config.GetRequiredSection("Company2config");
+        //ConfigSettings config2Setting = new ConfigSettings();
+        //ConfigSection.Bind(config2Setting);
+
+        //for (int i = 0;  i < 2; i++)
+        //{
+
+        //}
+        //Console.WriteLine("Company Name: " + configSetting.CompanyName);
+        //Console.WriteLine("ID: " + configSetting.ID);
         Console.WriteLine("Destination Path: " + configSetting.destinationPath);
         Console.WriteLine("Destination Bucket: " + configSetting.destinationBucket);
         Console.WriteLine("Is Encryption Enabled: " + configSetting.IsEncryptEnabled);
@@ -122,6 +174,7 @@ class Program
         {
             Console.WriteLine($"Bucket {configSetting.destinationBucket} does not exist, creating it now...");
             bool bucketCreated = await s3Service.CreateBucketAsync(configSetting.destinationBucket, awsSettings.Region);
+            Console.WriteLine($"Bucket region : {awsSettings.Region}");
             if(bucketCreated)
             {
                 Console.WriteLine($"Bucket {configSetting.destinationBucket}created successfully.");
@@ -143,11 +196,12 @@ class Program
         {
             Console.WriteLine($"Folder does not exist in the bucket");
             await s3Service.CreateFoldersAsync(configSetting.destinationBucket, configSetting.destinationPath);
-            
-            
+
         }
         //Getting the file count and uploading files by looping through the files in the local directory
         int totalFiles = fileReader.GetFileCount();
+        int successCount = 0;
+        
         if (totalFiles == 0)
         {
             Console.WriteLine("No files found in the specified directory.Please ensure the directory contains files.");
@@ -157,41 +211,47 @@ class Program
         {
             for (var i = 0; i < totalFiles; i++)
             {
+                
                 var file = fileReader.GetFiles()[i];
                 
                 Console.WriteLine($"File {i + 1} : {file.Name}");
                 if (configSetting.IsEncryptEnabled)
                 {
-                    await s3Service.UploadFileAsyncIncludeEncryptName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
+
+                    bool FileTransfered = await s3Service.UploadFileAsyncIncludeEncryptName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
+                    if (FileTransfered)
+                    {
+                        successCount++;
+                    }
                 }
                 else
                 {
-                    await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
+                    bool FileTransfered = await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
+                    if (FileTransfered)
+                    {
+                        successCount++;
+                    }
+                    
                 }
                     
             }
-            //for(var i=0; i < totalFiles; i++)
-            //{
-            //    var file = fileReader.GetFiles()[i];
-            //    if (configSetting.IsEncryptEnabled)
-            //    {
-            //        var encryptFileName = FileEncrypt.EncryptFileName(file.Name);
-            //        Console.WriteLine($"File {i+1} : Encrypted File Name: {encryptFileName}");
-            //        await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, encryptFileName);
-            //    }
-            //    else
-            //    {
-            //                           Console.WriteLine($"File {i+1} : {file.Name}");
-            //        await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
-            //    }
-            //}
         }
         else
         {
             var file = fileReader.GetFiles()[0];
             Console.WriteLine($"File : {file.Name}");
-            await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
-        }       
+            bool FileTransfered = await s3Service.UploadFileAsyncIncludeTempName(configSetting.destinationBucket, configSetting.destinationPath, file.FullName);
+            if (FileTransfered)
+            {
+                successCount++;
+            }
+            
+        }
+        int failedcount = totalFiles - successCount;
+        Console.WriteLine($"Total number of files to upload: {totalFiles}");
+        Console.WriteLine($"Total number of files uploaded successfully: {successCount}");
+        Console.WriteLine($"Total number of files failed to upload: {failedcount}");
+
     }
     
         
