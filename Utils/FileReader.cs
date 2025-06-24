@@ -22,7 +22,15 @@ namespace _2c2pFileTransferAndStore.Utils
             DirectoryInfo directory = new DirectoryInfo(_directoryPath);
             return directory.Exists;
         }
-
+        public bool FolderEndsWithEncrypt()
+        {
+            if(string.IsNullOrEmpty(_directoryPath))
+            {
+                return false;
+            }
+            DirectoryInfo directory = new DirectoryInfo(_directoryPath);
+            return directory.Name.EndsWith("No_Encrypt", StringComparison.OrdinalIgnoreCase);
+        }
         public FileInfo[] GetFiles()
         {
             DirectoryInfo directory = new DirectoryInfo(_directoryPath);

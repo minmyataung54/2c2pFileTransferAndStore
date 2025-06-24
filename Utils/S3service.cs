@@ -193,7 +193,7 @@ namespace _2c2pFileTransferAndStore.Utils
             }
             catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                //Console.WriteLine($"Bucket '{bucketName}' does not exist.");
+                Console.WriteLine($"Bucket '{bucketName}' does not exist.");
                 return false;
             }
             catch (Exception ex)
